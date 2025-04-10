@@ -97,6 +97,8 @@ path1 = path[:split_index]
 path2 = path[split_index:]
 # reconstruct the path with path2+path1
 path = np.concatenate((path2, path1), axis=0)
+# tare the path to start at (0,0)
+path -= path[0]
 dt = 0.05
 vehicle_positions, velocity_profile = generate_motion(path, v0=50, t0=2, dt=0.05)
 print("Vehicle positions:", vehicle_positions)
