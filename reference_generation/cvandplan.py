@@ -88,10 +88,16 @@ def animate_path(path, vehicle_positions):
     plt.show()
 
 # Main
-folder = "C:/16745_Optimal_Control_and_Reinforcement_Learning/WIPER/reference_generation/test/"
-image_path = folder + "test2.png"
+folder = "C:/16745_Optimal_Control_and_Reinforcement_Learning/16745_project/reference_generation/test/"
+image_path = folder + "test1.png"
 path = extract_path_from_image(image_path, show=True)
-    
+# split the path into 2 parts, 0.2 and 0.8
+split_index = int(len(path) * 0.1)
+path1 = path[:split_index]
+path2 = path[split_index:]
+# reconstruct the path with path2+path1
+path = np.concatenate((path2, path1), axis=0)
+dt = 0.05
 vehicle_positions, velocity_profile = generate_motion(path, v0=50, t0=2, dt=0.05)
 print("Vehicle positions:", vehicle_positions)
 animate_path(path, vehicle_positions)
@@ -104,8 +110,21 @@ for i in range(len(vehicle_positions)-1):
     direction = np.arctan2(dy, dx)  # angle in radians
     diections.append(direction)
 diections = np.array(diections)
-
-# save x,v, and direction to a pkl file
+# based on sirection , generate theta dot
+theta_dot = []
+for i in range(len(diections)-1):
+    dtheta = diections[i+1] - diections[i]
+    if dtheta > np.pi:
+        dtheta -= 2 * np.pi
+    elif dtheta < -np.pi:
+        dtheta += 2 * np.pi
+    theta_dot.append(dtheta / dt)
+# save x,v, and direction, theta_dot to a pkl file
 import pickle
-with open(folder + "reference_data.pkl", "wb") as f:
-    pickle.dump((vehicle_positions, velocity_profile, diections), f)
+with open(folder + "reference_data_rec.pkl", "wb") as f:
+    pickle.dump({
+        "x": vehicle_positions,
+        "theta": diections,
+        "v": velocity_profile,
+        "omega": theta_dot,
+    }, f)
